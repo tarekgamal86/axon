@@ -21,7 +21,7 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 3. **Procurement processes** - disconnected from engineering and project management
 4. **EPCM project management** - the final piece, often reinventing the wheel
 
-This creates:
+**This creates:**
 - Complete disconnect between phases
 - Company standards not communicated to EPCM suppliers
 - Poor visibility across the full lifecycle
@@ -126,9 +126,9 @@ This creates:
 
 ### 2.2 External Services
 
-**Core:**
-- Database: PostgreSQL via Neon
-- Hosting: Uncloud (Hetzner)
+**Core Services:**
+- Database: PostgreSQL via **Neon**
+- Hosting: **Uncloud** (Hetzner)
 - Auth: Better Auth (built into Takeout)
 - File Storage: AWS S3 or Cloudflare R2
 - Real-time Sync: Zero (built into Takeout)
@@ -139,69 +139,101 @@ This creates:
 - Credit/Token System
 - Model Registry
 - Agent Runtime
-- LLM Providers: OpenAI, Anthropic, Google, etc. (user's choice)
+- LLM Providers: OpenAI, Anthropic, Google, etc.
 
 **Operational:**
-- Analytics: PostHog
-- Error Tracking: Sentry
-- Email: Resend
-- Payments: Stripe
+- Analytics: **PostHog**
+- Error Tracking: **Sentry**
+- Email: **Resend**
+- Payments: **Stripe**
 
 ### 2.3 System Architecture
 
-**Client Layer:**
-- Web (One SSR)
-- iOS (Expo)
-- Android (Expo)
+**CLIENT LAYER:**
+- Web App (One SSR)
+- iOS App (Expo)
+- Android App (Expo)
 
-**Sync Layer:**
-- Zero (CRDT real-time sync)
+**SYNC LAYER:**
+- Zero (CRDT real-time sync between client/server)
 
-**Server Layer:**
+**SERVER LAYER:**
 - API Routes (One)
 - Mutators (Zero)
-- Better Auth (Self-hosted)
+- Better Auth (Self-hosted authentication)
 
-**Data Layer:**
+**DATA LAYER:**
 - PostgreSQL (Neon)
 - Zero Sync (CVR)
 - S3/R2 (File Storage)
 
-**AI Agent Layer:**
-- LLM Gateway
-- Agent Runtime
-- Skills Registry
-- BYOK Manager
-- Credit System
+### 2.4 AI Agent Architecture (Deep Dive)
 
-### 2.4 Security Requirements
-- HTTPS everywhere
-- Password hashing (Argon2 or bcrypt)
-- SQL injection protection
-- XSS protection
-- CSRF tokens
-- Rate limiting
-- Security headers
+**Vision:** Cursor-like Model Marketplace - similar to how Cursor IDE allows users to bring their own API keys or subscribe to managed models.
 
-### 2.5 AI Agent Architecture (Deep Dive)
-
-**Vision:** Cursor-like Model Marketplace
-
-**Option A: Bring Your Own API Key (BYOK)**
+**OPTION A: Bring Your Own API Key (BYOK)**
 - Users connect their own API keys (OpenAI, Anthropic, Google, Azure, AWS Bedrock)
-- Users pay their own LLM bills directly
-- Axon provides the agent infrastructure
+- Users pay their own LLM bills directly through their provider
+- Axon provides the agent infrastructure and workflow automation
 
-**Option B: Axon Model Subscription**
+**OPTION B: Axon Model Subscription**
 - Users subscribe to Axon's managed models
 - Axon handles LLM costs and provides credits/tokens
+- Similar to OpenRouter or LiteLLM
 
-**Core Components:**
-1. LLM Gateway/Proxy - Abstraction layer routing to any LLM provider
-2. API Key Manager - Secure storage and routing of user-provided keys
-3. Credit/Token System - For Axon subscriptions
-4. Model Registry - List of available models (by provider)
-5. Agent Runtime - Executes AI agents using selected models
+**AI AGENT LAYER COMPONENTS:**
+
+1. **LLM Gateway/Proxy**
+   - Abstraction layer that routes to any LLM provider
+   - Open source options: LiteLLM, OpenRouter
+   - Handles provider-specific API differences
+   - Rate limiting and quota management
+
+2. **API Key Manager**
+   - Secure encrypted storage for user-provided keys
+   - Routing logic to use user's key for their requests
+   - Key validation and refresh handling
+
+3. **Credit/Token System**
+   - Track usage for Axon-managed subscriptions
+   - Tier-based credit allocation
+   - Usage analytics and billing
+
+4. **Model Registry**
+   - List of available models (by provider)
+   - Model capabilities and pricing info
+   - User preference storage
+
+5. **Agent Runtime**
+   - Executes AI agents using selected models
+   - Workflow orchestration
+   - Skill execution engine
+   - Memory and context management
+
+6. **Skills Registry**
+   - Marketplace for AI agent skills
+   - Standard libraries for EPCM industry
+   - User-created custom skills
+
+---
+
+### 2.5 Security Requirements
+
+**Essential Security:**
+- HTTPS everywhere
+- Password hashing (Argon2 or bcrypt)
+- SQL injection protection (via ORM)
+- XSS protection (input sanitization)
+- CSRF tokens for state-changing operations
+- Rate limiting on auth endpoints
+- Security headers (CSP, HSTS, X-Frame-Options)
+
+**AI Agent Security:**
+- API keys encrypted at rest
+- User data isolation
+- Agent permission scopes
+- Human-in-the-loop for critical actions
+- Audit logging for AI actions
 
 ---
 
