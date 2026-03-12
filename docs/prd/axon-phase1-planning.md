@@ -130,16 +130,14 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 - Database: PostgreSQL via **Neon**
 - Hosting: **Uncloud** (Hetzner)
 - Auth: Better Auth (built into Takeout)
-- File Storage: AWS S3 or Cloudflare R2
+- File Storage: **Cloudflare R2** (built into Takeout)
 - Real-time Sync: Zero (built into Takeout)
 
 **AI & Agents:**
-- LLM Gateway (LiteLLM or custom)
-- API Key Manager (BYOK support)
-- Credit/Token System
-- Model Registry
-- Agent Runtime
-- LLM Providers: OpenAI, Anthropic, Google, etc.
+- LLM Gateway: **LiteLLM**
+- Agent Framework: **LangGraph**
+- Agent Runtime: Custom based on LangGraph
+- Skills Registry: Custom
 
 **Operational:**
 - Analytics: **PostHog**
@@ -155,7 +153,7 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 - Android App (Expo)
 
 **SYNC LAYER:**
-- Zero (CRDT real-time sync between client/server)
+- Zero (CRDT real-time sync - enables Figma/Miro-style collaboration)
 
 **SERVER LAYER:**
 - API Routes (One)
@@ -165,79 +163,273 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 **DATA LAYER:**
 - PostgreSQL (Neon)
 - Zero Sync (CVR)
-- S3/R2 (File Storage)
+- Cloudflare R2 (File Storage)
 
-### 2.4 AI Agent Architecture (Deep Dive)
+### 2.4 Security Requirements
 
-**Vision:** Cursor-like Model Marketplace - similar to how Cursor IDE allows users to bring their own API keys or subscribe to managed models.
+**Authentication:**
+- Better Auth (built into Takeout)
+- OAuth, magic links, password authentication
+- Multi-factor authentication (MFA)
 
-**OPTION A: Bring Your Own API Key (BYOK)**
-- Users connect their own API keys (OpenAI, Anthropic, Google, Azure, AWS Bedrock)
-- Users pay their own LLM bills directly through their provider
-- Axon provides the agent infrastructure and workflow automation
+**Authorization:**
+- Role-Based Access Control (RBAC)
+- Organization-level permissions
+- Project-level access
+- Row-level security in database (PostgreSQL RLS)
 
-**OPTION B: Axon Model Subscription**
-- Users subscribe to Axon's managed models
-- Axon handles LLM costs and provides credits/tokens
-- Similar to OpenRouter or LiteLLM
-
-**AI AGENT LAYER COMPONENTS:**
-
-1. **LLM Gateway/Proxy**
-   - Abstraction layer that routes to any LLM provider
-   - Open source options: LiteLLM, OpenRouter
-   - Handles provider-specific API differences
-   - Rate limiting and quota management
-
-2. **API Key Manager**
-   - Secure encrypted storage for user-provided keys
-   - Routing logic to use user's key for their requests
-   - Key validation and refresh handling
-
-3. **Credit/Token System**
-   - Track usage for Axon-managed subscriptions
-   - Tier-based credit allocation
-   - Usage analytics and billing
-
-4. **Model Registry**
-   - List of available models (by provider)
-   - Model capabilities and pricing info
-   - User preference storage
-
-5. **Agent Runtime**
-   - Executes AI agents using selected models
-   - Workflow orchestration
-   - Skill execution engine
-   - Memory and context management
-
-6. **Skills Registry**
-   - Marketplace for AI agent skills
-   - Standard libraries for EPCM industry
-   - User-created custom skills
-
----
-
-### 2.5 Security Requirements
-
-**Essential Security:**
-- HTTPS everywhere
-- Password hashing (Argon2 or bcrypt)
-- SQL injection protection (via ORM)
-- XSS protection (input sanitization)
-- CSRF tokens for state-changing operations
-- Rate limiting on auth endpoints
-- Security headers (CSP, HSTS, X-Frame-Options)
+**Encryption:**
+- TLS in transit (HTTPS everywhere)
+- Encrypted at rest (database encryption)
+- API keys encrypted with AES-256
 
 **AI Agent Security:**
 - API keys encrypted at rest
-- User data isolation
-- Agent permission scopes
+- User data isolation (multi-tenant)
+- Agent permission scopes (what agents can/cannot do)
 - Human-in-the-loop for critical actions
 - Audit logging for AI actions
+- Rate limits per user
+
+**Compliance:**
+- GDPR (EU data residency with Neon)
+- SOC 2 (future goal)
+- ISO 27001 (future goal)
+
+### 2.5 Data Model (Comprehensive)
+
+**LEVEL 1: Organization & Access**
+
+*Organization*
+- id, name, settings, created_at
+- Financial Approval Workflows (CAPEX templates)
+- Engineering Templates (company standards)
+
+*User*
+- id, email, name, organization_id
+- Role within Organization: Admin, Member, Viewer
+- Project Access: which projects user can see/work on
+
+*Project Access (how external users get access)*
+- Internal: Direct assignment by org admin
+- External (EPCM/Supplier): Via procurement winning - auto-provisioned access
 
 ---
 
-## 3. Pricing Model
+**LEVEL 2: Projects & Work**
+
+*Project*
+- id, name, organization_id, status, budget, start_date, end_date
+- CAPEX Request linked
+- Methodology (Prince2, PMP, Kanban, Scrumban, Scrum)
+
+*Work Breakdown Structure (WBS)*
+- id, project_id, parent_id, name, description
+- Hierarchical structure
+
+*Task*
+- id, wbs_id, assignee_id, status, priority, due_date
+- Board: Kanban / Scrum / Gantt views
+
+*Milestone*
+- id, project_id, name, target_date, status
+
+*Board*
+- id, project_id, type (Gantt, Kanban, Scrum)
+- Columns, swimlanes configuration
+
+---
+
+**LEVEL 3: Documents & Collaboration**
+
+*Document*
+- id, project_id, name, type, current_version_id
+- Collaborative editing (via Zero/CRDT)
+
+*DocumentVersion*
+- id, document_id, version_number, file_path, created_by, created_at
+
+*Comment / Review*
+- id, document_id, user_id, content, position
+- Review status: Pending, Approved, Rejected
+
+*Standards Library*
+- id, organization_id, name, category, file_path
+- Accessible to external suppliers
+
+---
+
+**LEVEL 4: CAPEX & Finance**
+
+*CAPEX Request*
+- id, organization_id, project_id, title, amount, status
+- Approval Workflow: Draft → Submitted → Approved → Rejected
+
+*Budget*
+- id, project_id, total_amount, spent_amount
+
+*Cost Tracking*
+- id, project_id, category, amount, date, description
+
+---
+
+**LEVEL 5: AI Agents**
+
+*Agent Definition*
+- id, organization_id, name, description, skills
+
+*Skill*
+- id, name, description, action_schema
+- Can be marketplace skills (external)
+
+*Workflow Automation*
+- id, project_id, trigger, agent_id, actions
+- AI-driven workflows
+
+*Credit / Token*
+- id, organization_id, balance, subscription_tier
+
+*API Key (BYOK)*
+- id, organization_id, provider, encrypted_key
+- User-provided keys for their own LLM billing
+
+---
+
+### 2.6 AI Agent Architecture (Agent-First Platform)
+
+**Core Principle:** Axon IS an agent-first platform. AI agents are not a feature added on top - they ARE the platform. Every workflow, every action, every process is driven by agents. The UI is just the interface to interact with agents.
+
+**Components:**
+
+1. **LLM Gateway (LiteLLM)**
+   - Unified API for multiple LLM providers
+   - OpenAI, Anthropic, Google, Azure, AWS Bedrock
+   - Rate limiting and quota management
+
+2. **Agent Runtime (LangGraph)**
+   - Stateful, multi-step agent workflows
+   - Graph-based control flow
+   - Loops, backtracking, complex logic
+
+3. **Skills Registry**
+   - Pre-built skills for EPCM industry
+   - Custom skills per organization
+   - Marketplace skills (Wave 2)
+
+4. **BYOK Manager**
+   - Secure encrypted storage for user-provided API keys
+   - Routing to use user's key for their requests
+
+5. **Credit System**
+   - Track usage for Axon-managed subscriptions
+   - Tier-based credit allocation
+
+---
+
+## 3. Design System & UX
+
+### 3.1 Typography (Arabic + Latin)
+
+**Selected Fonts:**
+
+*Latin:* Inter
+- Clean, modern, highly readable
+- Used for: body text, UI labels, headings (Latin content)
+- Source: Google Fonts (free, open source)
+
+*Arabic:* IBM Plex Sans Arabic
+- Designed specifically for bilingual Arabic-Latin text
+- Professional, modern, excellent readability
+- Used for: Arabic content, RTL UI
+- Source: Google Fonts (free, open source)
+
+**Font Strategy:**
+- System fonts fallback: -apple-system, BlinkMacSystemFont for Latin
+- Font loading: Google Fonts CDN
+- RTL support: Full right-to-left layout for Arabic
+- Tamagui integration via font-face tokens
+
+### 3.2 Iconography
+
+**Primary:** Phosphor Icons (built into Takeout)
+- Weights: Thin, Light, Regular, Bold
+- Categories: UI, Files, Arrows, Charts
+
+**Extended:** 
+- Phosphor Duotone for visual hierarchy
+- Custom icons for EPCM-specific: Gantt, Kanban, engineering symbols
+
+### 3.3 Key User Flows
+
+**FLOW 1: Organization Setup**
+1. User signs up (email or OAuth)
+2. Create Organization (name, type)
+3. Set up Financial CAPEX Workflow (define approval stages)
+4. Upload Engineering Templates (company standards)
+5. Invite Team Members (roles: Admin, Member, Viewer)
+6. Organization ready
+
+**FLOW 2: Multi-Organization Project**
+1. Project Owner creates Project
+2. Select Methodology (Prince2, PMP, Kanban, Scrumban, Scrum)
+3. Define Project Details (budget, timeline, milestones)
+4. Link CAPEX Request (if already approved)
+5. Invite External Organizations (select, define access level)
+6. External orgs accept and join
+7. Project live with multi-org collaboration
+
+**FLOW 3: Engineering Process**
+1. Select Engineering Template
+2. Define Engineering Phases (FEED, Basic Design, Detailed Design)
+3. AI Agent suggests task breakdown
+4. Assign tasks to internal + external teams
+5. Document upload and versioning
+6. Review and approval workflow
+7. Progress tracking via Gantt
+
+**FLOW 4: Project Management (Gantt/Kanban/Scrum)**
+1. View Project in default board (configurable)
+2. Switch between: Gantt, Kanban, Scrum views
+3. Drag-drop task management
+4. AI Assistant helps optimize schedule
+5. Real-time collaboration (Figma-style)
+6. Comments, reviews, approvals inline
+
+**FLOW 5: AI Agent Interaction**
+1. User opens AI Panel
+2. Select Agent Type (Planner, Reviewer, Coordinator)
+3. Give natural language task
+4. Agent executes via LangGraph
+5. Results displayed with confidence score
+6. Human approval for critical actions
+
+**FLOW 6: CAPEX Approval**
+1. Create CAPEX Request
+2. Fill details (amount, justification, timeline)
+3. Submit to workflow
+4. Approvers notified
+5. Each approver reviews and approves/rejects
+6. Status updates in real-time
+7. If approved, funds released for project
+
+### 3.4 Wireframes
+
+1. Landing / Login - Value prop, sign up, login
+2. Organization Setup Wizard - Multi-step org creation
+3. Dashboard - Projects overview, KPIs, AI insights
+4. Project List - All projects with filters
+5. Project View (Tabbed) - Overview, Gantt, Kanban, Documents, Team
+6. Gantt View - Timeline, dependencies, critical path
+7. Kanban/Scrum Board - Task cards, swimlanes, drag-drop
+8. Document Editor - Collaborative, version history, comments
+9. AI Agent Panel - Chat interface, agent selection
+10. CAPEX Workflow - Approval stages, status tracking
+11. Settings - Organization, users, integrations
+12. Admin Panel - Platform analytics, user management
+
+---
+
+## 4. Pricing Model
 
 ### 3.1 Platform Subscription (Traditional)
 
@@ -278,9 +470,9 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 
 ---
 
-## 4. Next Steps
+## 5. Next Steps
 
-- [ ] Complete Phase 1: Planning (in progress)
+- [x] Complete Phase 1: Planning (Section 1-3 done)
 - [ ] Phase 2: Setup & Infrastructure
 - [ ] Phase 3: Development (MVP)
 - [ ] Phase 4: Maintenance
