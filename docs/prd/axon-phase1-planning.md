@@ -431,22 +431,29 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 
 ## 4. Pricing Model
 
-### 3.1 Platform Subscription (Traditional)
+**Based on market research of Asana, Monday, ClickUp, Trello, and AI tools (Cursor, GitHub Copilot)**
+
+### 4.1 Platform Subscription
+
+Based on market standard: €10-25/user/month for professional features
 
 | Tier | Price | Users | Projects | Features |
 |------|-------|-------|----------|----------|
-| Starter | €15/user/month | Up to 5 | 3 | Basic PM, Templates |
-| Professional | €35/user/month | Up to 20 | Unlimited | Full PM, Workflows, AI Assist |
-| Enterprise | Custom | Unlimited | Unlimited | Everything + CAD, Custom |
+| Free | €0 | Up to 3 | 1 | Limited features |
+| Starter | €10/user/month | Up to 5 | 3 | Basic PM features |
+| Professional | €25/user/month | Up to 20 | Unlimited | Full PM + Workflows |
+| Enterprise | Custom | Unlimited | Unlimited | Everything + CAD |
 
-### 3.2 AI Credits Model (Cursor-style)
+### 4.2 AI Credits Model (Cursor-style)
 
-| Plan | Price | AI Credits | Use Case |
-|------|-------|------------|----------|
-| Free | €0 | 100/mo | Try AI features |
-| Pro | €29/mo | 5,000/mo | Individual users |
-| Team | €99/mo | 25,000/mo | Small teams |
-| Enterprise | Custom | Unlimited | Full access |
+Based on AI coding tools: $10-40/user/month
+
+| Plan | Price | Credits | Notes |
+|------|-------|---------|-------|
+| Free | €0 | 100/mo | Try AI |
+| Pro | €20/mo | 5,000/mo | Individual |
+| Team | €80/mo | 25,000/mo | Teams |
+| Enterprise | Custom | Unlimited | Custom |
 
 **Credit Usage:**
 - Simple query: 1 credit
@@ -456,7 +463,7 @@ EPCM projects (€6M-€70M) are managed across fragmented, disconnected systems
 
 **BYOK Option:** Users can connect their own API keys and pay directly to LLM providers (no credits used)
 
-### 3.3 LLM Cost Reference (per 1M tokens)
+### 4.3 LLM Cost Reference (per 1M tokens)
 
 | Model | Input | Output |
 |-------|-------|--------|
